@@ -1,0 +1,151 @@
+PASO 1:
+Coder@aws-cli:~$ aws sts get-caller-identity
+{
+    "UserId": "AIDA*****************",
+    "Account": "123456789012",
+    "Arn": "arn:aws:iam::123456789012:user/admin-danilo"
+}
+
+Coder@aws-cli:~$ aws iam create-user --user-name dev-danilo
+{
+    "User": {
+        "Path": "/",
+        "UserName": "dev-danilo",
+        "UserId": "AIDA*****************",
+        "Arn": "arn:aws:iam::123456789012:user/dev-danilo",
+        "CreateDate": "2026-11-20T19:29:35+00:00"
+    }
+}
+
+Coder@aws-cli:~$ aws iam list-users
+{
+    "Users": [
+        {
+            "Path": "/",
+            "UserName": "admin-danilo",
+            "UserId": "AIDA*****************",
+            "Arn": "arn:aws:iam::123456789012:user/admin-danilo",
+            "CreateDate": "2026-11-20T00:08:59+00:00"
+        },
+        {
+            "Path": "/",
+            "UserName": "dev-danilo",
+            "UserId": "AIDA*****************",
+            "Arn": "arn:aws:iam::123456789012:user/dev-danilo",
+            "CreateDate": "2026-11-20T19:29:35+00:00"
+        }
+    ]
+}
+
+Coder@aws-cli:~$ aws iam get-user --user-name dev-danilo
+{
+    "User": {
+        "Path": "/",
+        "UserName": "dev-danilo",
+        "UserId": "AIDA*****************",
+        "Arn": "arn:aws:iam::123456789012:user/dev-danilo",
+        "CreateDate": "2026-11-20T19:29:35+00:00"
+    }
+}
+
+PASO 2:
+Coder@aws-cli:~$ aws iam tag-user --user-name dev-danilo --tags Key=area,Value=desarrollo
+
+Coder@aws-cli:~$ aws iam update-user --user-name dev-danilo --new-user-name lector-danilo
+
+Coder@aws-cli:~$ aws iam get-user --user-name lector-danilo
+{
+    "User": {
+        "Path": "/",
+        "UserName": "lector-danilo",
+        "UserId": "AIDA*****************"
+        "Arn": "arn:aws:iam::123456789012:user/lector-danilo",
+        "CreateDate": "2026-11-20T19:29:35+00:00",
+        "Tags": [
+            {
+                "Key": "area",
+                "Value": "desarrollo"
+            }
+        ]
+    }
+}
+
+PASO 3:
+Coder@aws-cli:~$ aws iam attach-user-policy --user-name lector-danilo --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+
+Coder@aws-cli:~$ aws iam list-attached-user-policies --user-name lector-danilo
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEC2ReadOnlyAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
+        }
+    ]
+}
+
+PASO 4:
+Coder@aws-cli:~$ aws iam create-access-key --user-name lector-danilo
+{
+    "AccessKey": {
+        "UserName": "lector-danilo",
+        "AccessKeyId": "AKIA*****************",
+        "Status": "Active",
+        "SecretAccessKey": "****************************************",
+        "CreateDate": "2026-11-20T19:58:00+00:00"
+    }
+}
+Coder@aws-cli:~$ aws configure --profile lector-danilo
+
+
+Tip: You can deliver temporary credentials to the AWS CLI using your AWS Console session by running the command 'aws login'.
+
+AWS Access Key ID [None]: AKIA*****************
+AWS Secret Access Key [None]: ****************************************
+Default region name [None]: us-east-2
+Default output format [None]: json
+
+Configure AWS skills and the AWS MCP server for your AI coding agent(s)? [y/n/never]: n
+
+Coder@aws-cli:~$ aws sts get-caller-identity --profile lector-danilo
+{
+    "UserId": "AIDA*****************",
+    "Account": "123456789012",
+    "Arn": "arn:aws:iam::123456789012:user/lector-danilo"
+}
+
+Coder@aws-cli:~$ aws ec2 describe-instances --profile lector-danilo
+
+{
+    "Reservations": []
+}
+
+Coder@aws-cli:~$ aws iam list-users --profile lector-danilo
+
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListUsers operation: User: arn:aws:iam::123456789012:user/lector-danilo is not authorized to perform: iam:ListUsers on resource: arn:aws:iam::123456789012:user/ because no identity-based policy allows the iam:ListUsers action. Go to https://us-east-1.console.aws.amazon.com/iam/home?region=us-east-1#/authorization-details/e22crav72qztdq1r4umddfhvx for complete details, or call the GetRequestAuthorizationDetails API with the following authorization id: e22crav72qztdq1r4umddfhvx
+
+PASO 5:
+Coder@aws-cli:~$ aws iam detach-user-policy --user-name lector-danilo --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+
+Coder@aws-cli:~$ aws iam list-attached-user-policies --user-name lector-danilo
+{
+    "AttachedPolicies": []
+}
+
+Coder@aws-cli:~$ aws iam delete-access-key --user-name lector-danilo --access-key-id AKIA*****************
+
+Coder@aws-cli:~$ aws iam delete-user --user-name lector-danilo
+
+Coder@aws-cli:~$ aws iam list-users
+{
+    "Users": [
+        {
+            "Path": "/",
+            "UserName": "admin-danilo",
+            "UserId": "AIDA*****************",
+            "Arn": "arn:aws:iam::123456789012:user/admin-danilo",
+            "CreateDate": "2026-11-20T00:08:59+00:00"
+        }
+    ]
+}
+
