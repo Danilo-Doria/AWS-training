@@ -1,0 +1,117 @@
+PASO-1:
+Coder@rwadmin-90533010005:~$ aws s3 mb s3://practica-danilo-3007
+make_bucket: practica-danilo-3007
+Coder@rwadmin-90533010005:~$ aws s3 ls
+2026-11-23 18:18:33 practica-danilo-3007
+Coder@rwadmin-90533010005:~$ aws s3api get-bucket-location --bucket practica-danilo-3007
+{
+    "LocationConstraint": "us-east-2"
+}
+
+PASO-2:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ echo "Contenido de notas" > notas.txt
+echo "Lista de tareas" > tareas.txt
+echo "Informacion secreta" > secreto.txt
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 cp notas.txt s3://practica-danilo-3007/
+upload: ./notas.txt to s3://practica-danilo-3007/notas.txt       
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 sync . s3://practica-danilo-3007/ --exclude "*" --include "tareas.txt" --include "secreto.txt"
+upload: ./tareas.txt to s3://practica-danilo-3007/tareas.txt     
+upload: ./secreto.txt to s3://practica-danilo-3007/secreto.txt   
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 ls s3://practica-danilo-3007/ --recursive --human-readable --summarize
+2026-11-23 18:33:35   19 Bytes notas.txt
+2026-11-23 18:34:13   20 Bytes secreto.txt
+2026-11-23 18:34:13   16 Bytes tareas.txt
+
+Total Objects: 3
+   Total Size: 55 Bytes
+
+PASO-3:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 cp s3://practica-danilo-3007/notas.txt -
+Contenido de notas
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 ls s3://practica-danilo-3007/tareas.txt
+2026-11-23 18:34:13         16 tareas.txt
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ mkdir descargas
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ cd descargas
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/descargas$ aws s3 cp s3://practica-danilo-3007/secreto.txt .
+download: s3://practica-danilo-3007/secreto.txt to ./secreto.txt
+
+PASO-4:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/descargas$ aws s3 mv s3://practica-danilo-3007/tareas.txt s3://practica-danilo-3007/pendientes.txt
+move: s3://practica-danilo-3007/tareas.txt to s3://practica-danilo-3007/pendientes.txt
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 cp notas.txt s3://practica-danilo-3007/
+upload: ./notas.txt to s3://practica-danilo-3007/notas.txt       
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 cp s3://practica-danilo-3007/notas.txt -
+Contenido de notas version 2.0
+
+PASO-5:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 presign s3://practica-danilo-3007/notas.txt --expires-in 60
+https://practica-danilo-3007.s3.us-east-2.amazonaws.com/notas.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2CUR7VRQWBBMMAMV%2F20261124%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20261124T000017Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=eef903b326fe8032f154becbece52128362dfaba1929bf1a35bec4b0a5765a71
+
+PASO-6:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam create-user --user-name lector-s3-danilo     
+{
+    "User": {
+        "Path": "/",
+        "UserName": "lector-s3-danilo",
+        "UserId": "AIDA*****************",
+        "Arn": "arn:aws:iam::123456789112:user/lector-s3-danilo",
+        "CreateDate": "2026-11-24T00:05:51+00:00"
+    }
+}
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam put-user-policy --user-name lector-s3-danilo --policy-name leer-objetos --policy-document file://solo-lectura.json
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam create-access-key --user-name lector-s3-danilo     
+{
+    "AccessKey": {
+        "UserName": "lector-s3-danilo",
+        "AccessKeyId": "AKIA*****************",
+        "Status": "Active",
+        "SecretAccessKey": "****************************************",
+        "CreateDate": "2026-11-24T00:08:39+00:00"
+    }
+}
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws configure --profile lector-s3
+
+Tip: You can deliver temporary credentials to the AWS CLI using your AWS Console session by running the command 'aws login'.
+
+AWS Access Key ID [None]: AKIA*****************
+AWS Secret Access Key [None]: ****************************************
+Default region name [None]: us-east-2
+Default output format [None]: json
+
+Configure AWS skills and the AWS MCP server for your AI coding agent(s)? [y/n/never]: n
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 cp s3://practica-danilo-3007/notas.txt - --profile lector-s3
+Contenido de notas version 2.0
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 ls s3://practica-danilo-3007/ --profile lector-s3
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListObjectsV2 operation: User: arn:aws:iam::692869639265:user/lector-s3-danilo is not authorized to perform: s3:ListBucket on resource: "arn:aws:s3:::practica-danilo-3007" because no identity-based policy allows the s3:ListBucket action
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 rm s3://practica-danilo-3007/secreto.txt --profile lector-s3
+delete failed: s3://practica-danilo-3007/secreto.txt An error occurred (AccessDenied) when calling the DeleteObject operation: User: arn:aws:iam::692869639265:user/lector-s3-danilo is not authorized to perform: s3:DeleteObject on resource: "arn:aws:s3:::practica-danilo-3007/secreto.txt" because no identity-based policy allows the s3:DeleteObject action
+
+PASO-7:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 rb s3://practica-danilo-3007
+remove_bucket failed: s3://practica-danilo-3007 An error occurred (BucketNotEmpty) when calling the DeleteBucket operation: The bucket you tried to delete is not empty
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 rm s3://practica-danilo-3007/ --recursive
+delete: s3://practica-danilo-3007/notas.txt
+delete: s3://practica-danilo-3007/pendientes.txt
+delete: s3://practica-danilo-3007/secreto.txt
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 rb s3://practica-danilo-3007
+remove_bucket: practica-danilo-3007
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam delete-access-key --user-name lector-s3-danilo --access-key-id AKIA*****************
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam delete-user-policy --user-name lector-s3-danilo --policy-name leer-objetos
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam delete-user --user-name lector-s3-danilo     
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws iam list-users
+{
+    "Users": [
+        {
+            "Path": "/",
+            "UserName": "admin-danilo",
+            "UserId": "AIDA*****************",
+            "Arn": "arn:aws:iam::12345678912:user/admin-danilo",
+            "CreateDate": "2026-11-20T00:08:59+00:00"
+        }
+    ]
+}
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$ aws s3 ls
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades$
