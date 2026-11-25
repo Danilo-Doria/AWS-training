@@ -1,0 +1,237 @@
+PASO-1:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws s3 mb s3://reportes-danilo-3007
+make_bucket: reportes-danilo-3007
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ echo "Este es el contenido del reporte" > reporte.txt
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws s3 cp reporte.txt s3://reportes-danilo-3007/
+upload: ./reporte.txt to s3://reportes-danilo-3007/reporte.txt
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws s3 ls s3://reportes-danilo-3007
+2026-11-24 22:11:42         33 reporte.txt
+
+PASO-2:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ # Política de confianza: quién puede asumir el rol 
+cat > confianza.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": { "Service": "ec2.amazonaws.com" },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+
+# Política de permisos: qué puede hacer
+cat > permisos.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["s3:GetObject"],
+    "Resource": "arn:aws:s3:::reportes-danilo-3007/*"
+  }]
+}
+EOF
+
+# Comprobar que un JSON está bien escrito
+python3 -m json.tool confianza.json
+python3 -m json.tool permisos.json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::reportes-danilo-3007/*"
+        }
+    ]
+}
+
+PASO-3:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam create-role --role-name ec2-lector-s3
+
+aws: [ERROR]: An error occurred (ParamValidation): the following arguments are required: --assume-role-policy-document
+
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam create-role --role-name ec2-lector-s3 --assume-role-policy-document file://confianza.json
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "ec2-lector-s3",
+        "RoleId": "AROA*****************",
+        "Arn": "arn:aws:iam::123456789012:role/ec2-lector-s3",
+        "CreateDate": "2026-11-25T03:49:54+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+    }
+}
+
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam get-role --role-name ec2-lector-s3
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "ec2-lector-s3",
+        "RoleId": "AROA*****************",
+        "Arn": "arn:aws:iam::123456789012:role/ec2-lector-s3",
+        "CreateDate": "2026-11-25T03:49:54+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "MaxSessionDuration": 3600,
+        "MaxSigninSessionDuration": 3600,
+        "RoleLastUsed": {}
+    }
+}
+
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam list-role-policies --role-name ec2-lector-s3
+{
+    "PolicyNames": []
+}
+
+PASO-4:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam put-role-policy --role-name ec2-lector-s3 --pol
+icy-name leer-reportes --policy-document file://permisos.json
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam list-role-policies --role-name ec2-lector-s3
+{
+    "PolicyNames": [
+        "leer-reportes"
+    ]
+}
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam get-role-policy --role-name ec2-lector-s3 --pol
+icy-name leer-reportes
+{
+    "RoleName": "ec2-lector-s3",
+    "PolicyName": "leer-reportes",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:GetObject"
+                ],
+                "Resource": "arn:aws:s3:::reportes-danilo-3007/*"
+            }
+        ]
+    }
+}
+
+PASO-5:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam update-role --role-name ec2-lector-s3 --descrip
+tion "Rol para que EC2 lea reportes"
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam tag-role --role-name ec2-lector-s3 --tags Key=s
+emana,Value=1    
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam get-role --role-name ec2-lector-s3
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "ec2-lector-s3",
+        "RoleId": "AROA*****************",
+        "Arn": "arn:aws:iam::123456789012:role/ec2-lector-s3",
+        "CreateDate": "2026-11-25T03:49:54+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "Description": "Rol para que EC2 lea reportes",
+        "MaxSessionDuration": 3600,
+        "MaxSigninSessionDuration": 3600,
+        "Tags": [
+            {
+                "Key": "semana",
+                "Value": "1"
+            }
+        ],
+        "RoleLastUsed": {}
+    }
+}
+
+PASO-6:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam create-instance-profile --instance-profile-name ec2-lector-s3
+{
+    "InstanceProfile": {
+        "Path": "/",
+        "InstanceProfileName": "ec2-lector-s3",
+        "InstanceProfileId": "AIPA*****************",
+        "Arn": "arn:aws:iam::123456789012:instance-profile/ec2-lector-s3",
+        "CreateDate": "2026-11-25T04:13:42+00:00",
+        "Roles": []
+    }
+}
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam add-role-to-instance-profile --instance-profile-name ec2-lector-s3 --role-name ec2-lector-s3
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam get-instance-profile --instance-profile-name ec2-lector-s3
+{
+    "InstanceProfile": {
+        "Path": "/",
+        "InstanceProfileName": "ec2-lector-s3",
+        "InstanceProfileId": "AIPA*****************",
+        "Arn": "arn:aws:iam::123456789012:instance-profile/ec2-lector-s3",
+        "CreateDate": "2026-11-25T04:13:42+00:00",
+        "Roles": [
+            {
+                "Path": "/",
+                "RoleName": "ec2-lector-s3",
+                "RoleId": "AROA*****************",
+                "Arn": "arn:aws:iam::123456789012:role/ec2-lector-s3",
+                "CreateDate": "2026-11-25T03:49:54+00:00",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                }
+            }
+        ],
+        "Tags": []
+    }
+}
+
+PASO-7:
+danilo@Danilo:~/Documents/Riwi 2026/complements/AWS/AWS-training/semana_3$ aws iam delete-role --role-name ec2-lector-s3
+
+aws: [ERROR]: An error occurred (DeleteConflict) when calling the DeleteRole operation: Cannot delete entity, must remove roles from instance profile first.

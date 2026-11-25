@@ -3,6 +3,6 @@
   "Statement": [{
     "Effect": "Allow",
     "Action": ["s3:GetObject"],
-    "Resource": "arn:aws:s3:::<bucket>/*"
+    "Resource": "arn:aws:s3:::reportes-danilo-3007/*"
   }]
 }
