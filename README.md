@@ -6,7 +6,7 @@ Repositorio dedicado a documentar el progreso práctico, conceptual y de laborat
 
 ## 📁 Estructura del Repositorio
 
-El aprendizaje y los laboratorios se organizan por semanas formativas y prácticas temáticas. Actualmente, la **Semana 1** contiene tres actividades prácticas especializadas:
+El aprendizaje y los laboratorios se organizan por semanas formativas y prácticas temáticas. Actualmente, la **Semana 1** contiene cuatro actividades prácticas especializadas:
 
 ```text
 AWS-training/
@@ -31,15 +31,23 @@ AWS-training/
     │   ├── secreto.txt
     │   ├── solo-lectura.json
     │   └── tareas.txt
-    └── role_practice/             # Actividad 3: Roles IAM, políticas de confianza y perfiles de instancia EC2
+    ├── role_practice/             # Actividad 3: Roles IAM, políticas de confianza y perfiles de instancia EC2
+    │   ├── 01-info.md
+    │   ├── 02-command.md
+    │   ├── 03-activity.md
+    │   ├── confianza.json
+    │   ├── evidence-raw.txt
+    │   ├── evidence.md
+    │   ├── permisos.json
+    │   └── reporte.txt
+    └── EC2_practice/              # Actividad 4: Servidores virtuales EC2, Security Groups, User Data y roles
         ├── 01-info.md
         ├── 02-command.md
         ├── 03-activity.md
-        ├── confianza.json
-        ├── evidence.md
         ├── evidence-raw.txt
-        ├── permisos.json
-        └── reporte.txt
+        ├── evidence.md
+        └── practica-ec2/
+            └── inicio.sh
 ```
 
 ---
@@ -47,18 +55,19 @@ AWS-training/
 ## 📌 Índice de Contenidos
 
 - [📁 Estructura del Repositorio](#-estructura-del-repositorio)
-- [🚀 Semana 1: Fundamentos de IAM, S3 y Roles](#-semana-1-fundamentos-de-iam-s3-y-roles)
+- [🚀 Semana 1: Fundamentos de IAM, S3, Roles y Cómputo en EC2](#-semana-1-fundamentos-de-iam-s3-roles-y-cómputo-en-ec2)
   - [Actividad 1: Fundamentos de IAM y AWS CLI (`IAM_practice`)](#-actividad-1-fundamentos-de-iam-y-aws-cli-iam_practice)
   - [Actividad 2: Almacenamiento en la Nube con Amazon S3 y Menor Privilegio (`bucket_practice`)](#-actividad-2-almacenamiento-en-la-nube-con-amazon-s3-y-menor-privilegio-bucket_practice)
   - [Actividad 3: Roles de IAM y Perfiles de Instancia para EC2 (`role_practice`)](#-actividad-3-roles-de-iam-y-perfiles-de-instancia-para-ec2-role_practice)
+  - [Actividad 4: Servidores Virtuales en Amazon EC2 (`EC2_practice`)](#-actividad-4-servidores-virtuales-en-amazon-ec2-ec2_practice)
 - [💻 Requisitos y Entorno de Trabajo](#-requisitos-y-entorno-de-trabajo)
 - [👨‍💻 Autor](#-autor)
 
 ---
 
-## 🚀 Semana 1: Fundamentos de IAM, S3 y Roles
+## 🚀 Semana 1: Fundamentos de IAM, S3, Roles y Cómputo en EC2
 
-En esta primera semana se cubren los pilares de seguridad, almacenamiento de objetos y delegación de permisos mediante identidades y roles temporales en AWS.
+En esta primera semana se cubren los pilares fundamentales de AWS: seguridad e identidades en IAM, almacenamiento de objetos en S3, delegación de credenciales efímeras con roles y el despliegue de infraestructura de cómputo en la nube mediante instancias EC2.
 
 ---
 
@@ -235,6 +244,70 @@ En este laboratorio se configuró un rol de menor privilegio y su correspondient
 - **Separación de Confianza y Permisos:** Un rol requiere ineludiblemente una política de confianza (*quién*) y una política de permisos (*qué*).
 - **Perfiles de Instancia en la CLI:** La consola gráfica de AWS asocia el perfil de instancia automáticamente al crear un rol para EC2, pero desde la CLI es un paso manual obligatorio.
 - **Integridad y Orden de Limpieza:** AWS protege los recursos impidiendo el borrado de un rol si aún está referenciado por un perfil de instancia.
+
+---
+
+### 🔹 Actividad 4: Servidores Virtuales en Amazon EC2 (`EC2_practice`)
+
+#### 🎯 Objetivos de la Actividad
+- Lanzar y administrar servidores virtuales en **Amazon EC2 (Elastic Compute Cloud)** mediante **AWS CLI v2**.
+- Automatizar la instalación y puesta en marcha de un servidor web Apache (`httpd`) mediante scripts de aprovisionamiento en arranque (**User Data: `inicio.sh`**).
+- Configurar y aplicar reglas de firewall perimetral con **Security Groups** siguiendo el principio de menor exposición (puerto 80 abierto al público y puerto 22 SSH restringido a la IP del administrador `/32`).
+- Gestionar el acceso remoto seguro vía **SSH** mediante pares de llaves criptográficas (`clave-danilo`).
+- Conectar y comprobar el consumo de credenciales temporales generadas por STS a través del **perfil de instancia (`ec2-lector-s3`)**, leyendo objetos en S3 sin configurar llaves fijas locales ni usar `aws configure`.
+- Analizar los estados de ciclo de vida de la instancia (`running`, `stopped`, `terminated`) y el comportamiento dinámico de las **direcciones IPv4 públicas**.
+- Realizar la terminación definitiva y limpieza ordenada de todos los recursos aprovisionados a lo largo de las prácticas.
+
+#### 📁 Estructura y Archivos
+
+| Archivo | Descripción |
+|---|---|
+| [`semana_1/EC2_practice/01-info.md`](./semana_1/EC2_practice/01-info.md) | Fundamentos conceptuales de Amazon EC2: instancias, AMIs, tipos de instancia, EBS, Security Groups, VPCs y estados de ciclo de vida. |
+| [`semana_1/EC2_practice/02-command.md`](./semana_1/EC2_practice/02-command.md) | Cheat sheet y guía de referencia rápida de comandos AWS CLI para EC2, pares de llaves y Security Groups. |
+| [`semana_1/EC2_practice/03-activity.md`](./semana_1/EC2_practice/03-activity.md) | Guía paso a paso del laboratorio: *Tu primer servidor en EC2*. |
+| [`semana_1/EC2_practice/evidence.md`](./semana_1/EC2_practice/evidence.md) | Informe formal de evidencias del laboratorio con trazas de ejecución CLI y respuestas a preguntas de reflexión. |
+| [`semana_1/EC2_practice/evidence-raw.txt`](./semana_1/EC2_practice/evidence-raw.txt) | Registro crudo de terminal con la secuencia completa de comandos ejecutados. |
+| [`semana_1/EC2_practice/practica-ec2/inicio.sh`](./semana_1/EC2_practice/practica-ec2/inicio.sh) | Script de User Data para automatizar la instalación de Apache (`httpd`) y publicación del sitio web de bienvenida. |
+
+#### 🛠️ Actividad Práctica: Tu Primer Servidor en EC2
+
+En este laboratorio se integraron todos los conceptos previos (IAM, S3, Roles y Redes) en un despliegue completo de cómputo en la nube:
+
+1. **Reconocimiento y Validación de Prerequisitos:**
+   - Verificación de identidad administradora (`admin-danilo`), región (`us-east-2`) y confirmación del perfil de instancia `ec2-lector-s3`.
+   - Consulta dinámica del AMI ID oficial de Amazon Linux 2023 (`ami-01e4a7224fcbfe81f`) mediante SSM Parameter Store y localización de la VPC por defecto (`vpc-098234409df616272`).
+
+2. **Par de Llaves Criptográficas:**
+   - Creación del par de llaves `clave-danilo`, almacenamiento local de la clave privada `.pem` y restricción estricta de permisos (`chmod 400`).
+
+3. **Aislamiento Perimetral con Security Groups:**
+   - Creación del grupo `web-danilo` (`sg-022fe3a75acfb92c8`).
+   - Apertura del puerto 80 (HTTP) a nivel global (`0.0.0.0/0`) y restricción del puerto 22 (SSH) exclusivamente a la IP pública del operador (`/32`).
+
+4. **Aprovisionamiento y Lanzamiento de la Instancia:**
+   - Creación del script de User Data `inicio.sh` para instalación y arranque automático del servidor web Apache.
+   - Despliegue de la instancia `t3.micro` con `run-instances`, inyectando AMI, llaves, Security Group, script de inicio y el perfil `ec2-lector-s3`.
+   - Obtención de la IP pública asignada (`77.***.**.***`).
+
+5. **Acceso SSH y Validación del Rol IAM:**
+   - Conexión remota interactiva por SSH y comprobación del servidor web respondiendo localmente (`curl http://localhost`).
+   - Comprobación de identidad (`aws sts get-caller-identity`), validando que la máquina opera con el rol `ec2-lector-s3` sin requerir credenciales locales ni `aws configure`.
+   - **Acción permitida:** Lectura exitosa de `reporte.txt` desde el bucket S3 (`reportes-danilo-3007`).
+   - **Acciones denegadas:** Bloqueo automático con `AccessDenied` al intentar listar el bucket (`s3:ListBucket`) o listar usuarios de IAM (`iam:ListUsers`), validando el aislamiento estricto de permisos.
+
+6. **Comprobación de Ciclo de Vida e IP Dinámica:**
+   - Detención (`stop-instances`) y reencendido (`start-instances`) de la máquina virtual, evidenciando el cambio de IP pública a `18.224.25.145`.
+
+7. **Limpieza Integral de Recursos:**
+   - Terminación de la instancia (`terminate-instances`), borrado del Security Group y eliminación del par de llaves en AWS.
+   - Limpieza ordenada de recursos remanentes de roles y S3: desvinculación y borrado del perfil de instancia, eliminación de la política en línea, borrado del rol y vaciado forzoso del bucket S3.
+
+#### 💡 Aprendizajes Clave
+- **Automatización mediante User Data:** Permite configurar instancias desde el primer arranque sin intervención manual posterior.
+- **Seguridad en Redes con Security Groups:** El principio de menor privilegio aplica también a redes; puertos de administración crítica como el 22 jamás deben exponerse a `0.0.0.0/0`.
+- **Seguridad de Cómputo sin Secretos Estáticos:** Los Instance Profiles combinados con IMDS y STS eliminan la necesidad de guardar credenciales fijas de larga duración dentro de servidores o repositorios.
+- **Naturaleza Efímera de las IPs Públicas:** En AWS, las IPs públicas básicas cambian al apagar y encender la instancia, haciendo indispensable el uso de Elastic IPs o balanceadores de carga (ALB) en entornos productivos.
+- **Modelo de Responsabilidad Compartida en IaaS:** AWS garantiza la seguridad física y del hipervisor, pero la seguridad del sistema operativo, parches, reglas de firewall y código es 100% responsabilidad del usuario.
 
 ---
 

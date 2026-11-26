@@ -1,0 +1,283 @@
+PASO-1:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws sts get-caller-identity
+{
+    "UserId": "AIDA*****************",
+    "Account": "123456789012",
+    "Arn": "arn:aws:iam::123456789012:user/admin-danilo"
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws configure get region
+us-east-2
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam get-instance-profile --instance-profile-name ec2-lector-s3
+{
+    "InstanceProfile": {
+        "Path": "/",
+        "InstanceProfileName": "ec2-lector-s3",
+        "InstanceProfileId": "AIPA*****************",
+        "Arn": "arn:aws:iam::123456789012:instance-profile/ec2-lector-s3",
+        "CreateDate": "2026-11-25T04:13:42+00:00",
+        "Roles": [
+            {
+                "Path": "/",
+                "RoleName": "ec2-lector-s3",
+                "RoleId": "AROA*****************",
+                "Arn": "arn:aws:iam::123456789012:role/ec2-lector-s3",
+                "CreateDate": "2026-11-25T03:49:54+00:00",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                }
+            }
+        ],
+        "Tags": []
+    }
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query "Parameters[0].Value" --output text
+ami-01e4a7224fcbfe81f
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query "Vpcs[].VpcId" --output text
+vpc-098234409df616272
+
+PASO-2:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 create-key-pair --key-name clave-danilo --query "KeyMaterial" --output text > clave-danilo.pem
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ chmod 400 clave-danilo.pem
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-key-pairs --query "KeyPairs[].KeyName" --output table
+------------------
+|DescribeKeyPairs|
++----------------+
+|  clave-danilo  |
++----------------+
+
+PASO-3:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 create-security-group --group-name web-danilo --description "HTTP abierto y SSH solo
+ desde mi IP" --query "GroupId" --output text
+sg-022fe3a75acfb92c8
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ curl -s https://checkip.amazonaws.com
+190.**.***.**
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 authorize-security-group-ingress --group-id sg-022fe3a75acfb92c8 --protocol tcp --po
+rt 80 --cidr 0.0.0.0/0
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-019de0e45d5474fc4",
+            "GroupId": "sg-022fe3a75acfb92c8",
+            "GroupOwnerId": "123456789012",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIpv4": "0.0.0.0/0",
+            "SecurityGroupRuleArn": "arn:aws:ec2:us-east-2:123456789012:security-group-rule/sgr-019de0e45d5474fc4"
+        }
+    ]
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 authorize-security-group-ingress --group-id sg-022fe3a75acfb92c8 --protocol tcp --port 22 --cidr 190.**.***.**/32
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-08460a3d4ef565282",
+            "GroupId": "sg-022fe3a75acfb92c8",
+            "GroupOwnerId": "123456789012",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIpv4": "190.**.***.**/32",
+            "SecurityGroupRuleArn": "arn:aws:ec2:us-east-2:123456789012:security-group-rule/sgr-08460a3d4ef565282"
+        }
+    ]
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-security-groups --group-ids sg-022fe3a75acfb92c8 --query "SecurityGroups[].
+IpPermissions[].[FromPort,IpRanges[0].CidrIp]" --output table
+----------------------------
+|  DescribeSecurityGroups  |
++----+---------------------+
+|  80|  0.0.0.0/0          |
+|  22|  190.**.***.**/32   |
++----+---------------------+
+
+PASO-4:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ cat > inicio.sh << 'EOF'
+#!/bin/bash
+dnf install -y httpd
+systemctl enable --now httpd
+echo "<h1>Hola desde mi instancia EC2</h1>" > /var/www/html/index.html
+EOF
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 run-instances --image-id ami-01e4a7224fcbfe81f --instance-type t3.micro --key-name clave-danilo --security-group-ids sg-022fe3a75acfb92c8 --iam-instance-profile Name=ec2-lector-s3 --user-data file://inicio.sh --tag-specifications "Resourc
+eType=instance,Tags=[{Key=Name,Value=web-danilo}]" --query "Instances[0].InstanceId" --output text
+i-*****************
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 wait instance-running --instance-ids i-*****************
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ 
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-instances --instance-ids i-***************** --query "Re
+servations[0].Instances[0].PublicIpAddress" --output text
+77.***.**.***
+
+PASO-5:
+
+
+PASO-6:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ ssh -i clave-danilo.pem ec2-user@77.***.**.***
+The authenticity of host '77.***.**.*** (77.***.**.***)' can't be established.
+ED25519 key fingerprint is SHA256:CQE3QFlG0OowcFGZavedjKhAIfdrSjbygN05NNiDuHc.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '77.***.**.***' (ED25519) to the list of known hosts.
+   ,     #_
+   ~\_  ####_        Amazon Linux 2023
+  ~~  \_#####\
+  ~~     \###|
+  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
+   ~~       V~' '->
+    ~~~         /
+      ~~._.   _/
+         _/ _/
+       _/m/'
+[ec2-user@ip-172-**-**-** ~]$ curl http://localhost
+<h1>Hola desde mi instancia EC2</h1>
+[ec2-user@ip-172-**-**-** ~]$ aws sts get-caller-identity
+{
+    "UserId": "AROA*****************:i-*****************",
+    "Account": "123456789012",
+    "Arn": "arn:aws:sts::123456789012:assumed-role/ec2-lector-s3/i-*****************"
+}
+[ec2-user@ip-172-**-**-** ~]$ aws s3 cp s3://reportes-danilo-3007/reporte.txt -
+Este es el contenido del reporte
+
+[ec2-user@ip-172-**-**-** ~]$ aws s3 ls s3://reportes-danilo-3007/
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListObjectsV2 operation: User: arn:aws:sts::123456789012:assumed-role/ec2-lector-s3/i-***************** is not authorized to perform: s3:ListBucket on resource: "arn:aws:s3:::reportes-danilo-3007" because no identity-based policy allows the s3:ListBucket action
+
+[ec2-user@ip-172-**-**-** ~]$ aws iam list-users
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListUsers operation: User: arn:aws:sts::123456789012:assumed-role/ec2-lector-s3/i-***************** is not authorized to perform: iam:ListUsers on resource: arn:aws:iam::123456789012:user/ because no identity-based policy allows the iam:ListUsers action. Go to https://us-east-1.console.aws.amazon.com/iam/home?region=us-east-1#/authorization-details/psxoa4w8p3j6xm6m3jqemxgq for complete details, or call the GetRequestAuthorizationDetails API with the following authorization id: psxoa4w8p3j6xm6m3jqemxgq
+
+PASO-7:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 stop-instances --instance-ids i-*****************
+{
+    "StoppingInstances": [
+        {
+            "InstanceId": "i-*****************",
+            "CurrentState": {
+                "Code": 64,
+                "Name": "stopping"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 start-instances --instance-ids i-*****************
+{
+    "StartingInstances": [
+        {
+            "InstanceId": "i-*****************",
+            "CurrentState": {
+                "Code": 0,
+                "Name": "pending"
+            },
+            "PreviousState": {
+                "Code": 80,
+                "Name": "stopped"
+            }
+        }
+    ]
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 wait instance-running --instance-ids i-*****************
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-instances --instance-ids i-***************** --query "Re
+servations[0].Instances[0].PublicIpAddress" --output text
+18.224.25.145
+
+PASO-8:
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 terminate-instances --instance-ids i-*****************
+{
+    "TerminatingInstances": [
+        {
+            "InstanceId": "i-*****************",
+            "CurrentState": {
+                "Code": 32,
+                "Name": "shutting-down"
+            },
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 wait instance-terminated --instance-ids i-*****************
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ 
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 delete-security-group --group-id sg-022fe3a75acfb92c8
+{
+    "Return": true,
+    "GroupId": "sg-022fe3a75acfb92c8"
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 delete-key-pair --key-name clave-danilo
+{
+    "Return": true,
+    "KeyPairId": "key-0307822dc349f5c03"
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 describe-instances --query "Reservations[].Instances[].[InstanceId,State.Name,InstanceType,PublicIpAddress]" --output table
+-----------------------------------------------------------
+|                    DescribeInstances                    |
++----------------------+-------------+-----------+--------+
+|  i-***************** |  terminated |  t3.micro |  None  |
++----------------------+-------------+-----------+--------+
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam remove-role-from-instance-profile --instance-profile-name ec2-lector-s3 --role-name ec2-lector-s3
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam delete-instance-profile --instance-profile-name ec2-lector-s3
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ 
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam list-role-policies --role-name ec2-lector-s3
+{
+    "PolicyNames": [
+        "leer-reportes"
+    ]
+}
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam delete-role-policy --role-name ec2-lector-s3 --policy-name leer-reportes
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam list-role-policies --role-name ec2-lector-s3
+{
+    "PolicyNames": []
+}
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws iam delete-role --role-name ec2-lector-s3
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ 
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws s3 rb s3://reportes-danilo-3007 --force
+remove_bucket: reportes-danilo-3007
+
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ aws ec2 delete-security-group --group-id sg-022fe3a75acfb92c8
+
+aws: [ERROR]: An error occurred (InvalidGroup.NotFound) when calling the DeleteSecurityGroup operation: The security group 'sg-022fe3a75acfb92c8' does not exist
+Coder@rwadmin-90533010005:~/Vídeos/AWS/actividades/AWS-training/semana_1/EC2_practice/practica-ec2$ 
